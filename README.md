@@ -47,8 +47,10 @@ streamlit run app/streamlit_app.py                                  # the app
 python -m querycraft.pipeline "How many day scholars are there?" --config v5+sc --model gemini
 ```
 
-No API key? Install [Ollama](https://ollama.com), run `ollama pull llama3.2:3b`, and set
-`LLAMA_BACKEND=ollama`, `LLAMA_MODEL=llama3.2:3b` in `.env`.
+Models used: `gemini-3.5-flash-lite` (Google AI Studio) and the open-weight
+`openai/gpt-oss-120b` (Groq). Groq has retired its Llama chat models; to run Llama, install
+[Ollama](https://ollama.com), `ollama pull llama3.2:3b`, and set `LLAMA_BACKEND=ollama`,
+`LLAMA_MODEL=llama3.2:3b` in `.env`. The `llama` model slot in the code is the open-model slot.
 
 ### Deploy the prototype (Streamlit Community Cloud)
 

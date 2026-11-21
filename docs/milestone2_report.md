@@ -43,10 +43,14 @@ known tables and columns, and the query runs on a read-only SQLite connection wi
 and a row limit.
 
 **Tools and models.** Python, SQLite with synthetic data (Faker, seed 42), sqlglot, Streamlit.
-Model A: **Gemini** via Google AI Studio (free tier, strong at code). Model B: open-source
-**Llama** via Groq or locally via Ollama, so that a closed and an open model can be compared
-on identical prompts. Temperature 0 everywhere for reproducibility. Only the schema, column
-descriptions and category values are sent to the model, never table rows.
+Model A: **`gemini-3.5-flash-lite`** via the Google AI Studio API: free tier, about 3 s per
+answer (the full `gemini-3.5-flash` took 35–75 s per call during our runs). Model B: the
+open-weight **`openai/gpt-oss-120b`** via the Groq API. We planned Llama on Groq, but Groq has
+retired its Llama chat models; Meta's **`llama3.2:3b`** still runs locally via Ollama as a third,
+small open model. All models get identical prompts at temperature 0, with hidden "thinking"
+kept minimal: with it on, Gemini spent 982 of its 1024 output tokens thinking and cut its
+JSON answer off. Only the schema, column descriptions and category values are sent to a
+model, never table rows.
 
 **Changes since Milestone 1.** Milestone 1 had only the V1 prompt (role + schema + question,
 free-text answer). Since then we built the database, the code-level safety layer, four new
@@ -97,7 +101,7 @@ harness that measures every prompt version, and a pytest suite (92 tests).
 |---|---|---|---|
 | Synthetic university database | Builds `university.db` (8 tables, 500 students) from seed 42 | Working | Same seed gives an identical DB (checked by fingerprint) |
 | SQL safety layer | Validator (one SELECT, no writes/PRAGMA/ATTACH, known tables/columns, LIMIT 500) + read-only executor with timeout | Working | 47 pytest tests |
-| LLM interface | One function for Gemini and Llama (Groq/Ollama), retries, caching | **[[TEAM: Working once Gemini and Groq are tested with your keys; until then Partly working]]** | Llama via local Ollama tested end to end |
+| LLM interface | One function for Gemini, Groq and Ollama models; rate-limit backoff, caching | Working | Tested end to end with gemini-3.5-flash-lite, gpt-oss-120b and llama3.2:3b |
 | Prompt builder | Fills V1–V5, ablation and fix-error templates | Working | Tests check every config fills all placeholders |
 | NL-to-SQL pipeline with self-correction | Question → prompt → LLM → JSON → validate → execute → fix loop (max 2) | Working | |
 | Streamlit app | Question box, model/version selectors, explanation, table, SQL, refusals | Working | **[[TEAM: deployed at …]]** |

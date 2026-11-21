@@ -5,8 +5,8 @@
 | Prompt ID and name | **P1**: QueryCraft SQL generation (`prompts/final/v5_value_hints.txt`) |
 | Step in the workflow | Step 1, run for every question |
 | Purpose | Turn a staff question into one read-only SQLite query plus a plain-English explanation, or refuse it |
-| Tool and model | Gemini **[[TEAM: exact model id, e.g. from `python -m querycraft.llm --list-models`]]** via Google AI Studio API (`google-genai` SDK); Llama **[[TEAM: exact id]]** via Groq (OpenAI-compatible API). Local testing: `llama3.2:3b` via Ollama. Identical prompt text for every model. |
-| Settings | temperature 0; max output tokens 1024; Ollama context 8192 tokens; one user message |
+| Tool and model | **`gemini-3.5-flash-lite`** via the Google AI Studio API (`google-genai` SDK) and the open-weight **`openai/gpt-oss-120b`** via the Groq API (OpenAI-compatible). Also run locally on Meta's **`llama3.2:3b`** via Ollama. Identical prompt text for every model. |
+| Settings | temperature 0; max output tokens 1024; hidden reasoning kept minimal (Gemini `thinking_level=minimal`, gpt-oss `reasoning_effort=low`) so the 1024 tokens go to the answer; Ollama context 8192 tokens; one user message |
 | System prompt | none (the whole prompt is one user message, so it is identical across providers) |
 | Examples included | 6 (4 answered, 1 `CANNOT_ANSWER`, 1 `UNSAFE`), from `prompts/fewshot_examples.yaml`, none taken from the test set |
 | Output format | JSON only: `plan`, `status` (`OK` / `CANNOT_ANSWER` / `UNSAFE`), `sql`, `explanation`, `assumptions` (list), `confidence` (`high` / `medium` / `low`) |
