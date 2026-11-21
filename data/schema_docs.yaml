@@ -1,0 +1,103 @@
+# Column descriptions and allowed values for categorical columns.
+# Used by prompt version V5 ("value hints") and by the Streamlit sidebar.
+# Contains NO student rows - only descriptions and the fixed category values.
+
+notes:
+  - "The current academic year is '2026-27'. Its odd semester is in progress: attendance exists for it, exam results do not yet."
+  - "academic_year is text in the form 'YYYY-YY', e.g. '2025-26'."
+  - "Money columns are whole rupees (INR)."
+  - "Attendance percentage is not stored; compute it as 100.0 * classes_attended / classes_held."
+  - "Pending dues for a fee row = amount_due - amount_paid."
+  - "A day scholar is a student with hostel_id IS NULL."
+
+tables:
+  programs:
+    description: "Degree programmes offered by the university."
+    columns:
+      program_id: "Primary key."
+      program_name: "Full programme name."
+      department: "Department that runs the programme."
+      duration_years: "Length of the programme in years (2, 3 or 4)."
+    allowed_values:
+      program_name: ["B.Tech CSE", "B.Tech ECE", "B.Tech ME", "BCA", "BBA", "B.Com (Hons)", "B.Sc Physics", "MBA"]
+      department: ["Computer Science & Engineering", "Electronics & Communication Engineering", "Mechanical Engineering", "Computer Applications", "Management", "Commerce", "Physics"]
+
+  hostels:
+    description: "University hostels. Each hostel is for one gender."
+    columns:
+      hostel_id: "Primary key."
+      hostel_name: "Name of the hostel."
+      gender: "Gender the hostel houses: 'M' or 'F'."
+      capacity: "Total number of beds."
+    allowed_values:
+      hostel_name: ["Aryabhatta Hall", "C.V. Raman Hall", "Homi Bhabha Hall", "Kalpana Chawla Hall", "Sarojini Naidu Hall"]
+      gender: ["M", "F"]
+
+  students:
+    description: "One row per currently enrolled student."
+    columns:
+      student_id: "Primary key."
+      name: "Student's full name."
+      gender: "'M' or 'F'."
+      program_id: "Programme the student is enrolled in (FK to programs)."
+      admission_year: "Calendar year of admission, e.g. 2024."
+      current_year: "Year of study in 2026-27 (1 = first year)."
+      hostel_id: "Hostel the student lives in (FK to hostels). NULL means day scholar."
+      email: "Student's university email address."
+    allowed_values:
+      gender: ["M", "F"]
+      admission_year: [2023, 2024, 2025, 2026]
+      current_year: [1, 2, 3, 4]
+
+  courses:
+    description: "Courses (subjects) taught in each programme, by semester."
+    columns:
+      course_id: "Primary key."
+      course_code: "Short code such as 'CSE301' (prefix + semester + number)."
+      course_name: "Course title. The same title can exist in more than one programme."
+      program_id: "Programme the course belongs to (FK to programs)."
+      semester: "Semester number within the programme (1 to 8)."
+      credits: "Credit value of the course (3, 4 or 6)."
+    allowed_values:
+      credits: [3, 4, 6]
+
+  enrollments:
+    description: "A student taking a course in a given academic year."
+    columns:
+      enrollment_id: "Primary key."
+      student_id: "FK to students."
+      course_id: "FK to courses."
+      academic_year: "Academic year of the enrollment, e.g. '2026-27'."
+    allowed_values:
+      academic_year: ["2023-24", "2024-25", "2025-26", "2026-27"]
+
+  attendance:
+    description: "Attendance for one enrollment. Percentage = 100.0 * classes_attended / classes_held."
+    columns:
+      enrollment_id: "Primary key and FK to enrollments."
+      classes_held: "Number of classes conducted."
+      classes_attended: "Number of classes the student attended."
+
+  exam_results:
+    description: "End-of-semester result for one enrollment (completed semesters only)."
+    columns:
+      enrollment_id: "Primary key and FK to enrollments."
+      internal_marks: "Internal assessment marks out of 40."
+      external_marks: "End-semester exam marks out of 60."
+      grade: "Letter grade based on total marks out of 100. F means fail."
+    allowed_values:
+      grade: ["O", "A+", "A", "B+", "B", "C", "P", "F"]
+
+  fees:
+    description: "Fee account for one student for one academic year."
+    columns:
+      fee_id: "Primary key."
+      student_id: "FK to students."
+      academic_year: "Academic year the fee is for, e.g. '2026-27'."
+      amount_due: "Total fee payable for the year in rupees (tuition, plus hostel fee for hostel residents)."
+      amount_paid: "Amount paid so far in rupees."
+      due_date: "Last date to pay, ISO format 'YYYY-MM-DD'."
+      status: "'PAID' (fully paid), 'PARTIAL' (some paid) or 'UNPAID' (nothing paid)."
+    allowed_values:
+      status: ["PAID", "PARTIAL", "UNPAID"]
+      academic_year: ["2023-24", "2024-25", "2025-26", "2026-27"]
