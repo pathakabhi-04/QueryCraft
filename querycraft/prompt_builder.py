@@ -36,26 +36,26 @@ class PromptConfig:
 
     @property
     def prompt_version(self) -> str:
-        return self.template.removesuffix(".txt")
+        return self.template.removesuffix(".txt").split("/")[-1]
 
 
 CONFIGS = {c.name: c for c in [
     # cumulative
-    PromptConfig("v1", "v1_baseline.txt", json_output=False),
-    PromptConfig("v2", "v2_rules_json.txt"),
-    PromptConfig("v3", "v3_fewshot.txt", fewshot=True),
-    PromptConfig("v4", "v4_plan_first.txt", fewshot=True, plan=True),
-    PromptConfig("v5", "v5_value_hints.txt", fewshot=True, plan=True, values=True),
-    PromptConfig("v5+sc", "v5_value_hints.txt", fewshot=True, plan=True, values=True,
+    PromptConfig("v1", "v1/v1_baseline.txt", json_output=False),
+    PromptConfig("v2", "v2/v2_rules_json.txt"),
+    PromptConfig("v3", "v3/v3_fewshot.txt", fewshot=True),
+    PromptConfig("v4", "v4/v4_plan_first.txt", fewshot=True, plan=True),
+    PromptConfig("v5", "final/v5_value_hints.txt", fewshot=True, plan=True, values=True),
+    PromptConfig("v5+sc", "final/v5_value_hints.txt", fewshot=True, plan=True, values=True,
                  self_correct=True),
     # ablations: exactly one technique added to v2
-    PromptConfig("v2+fewshot", "v3_fewshot.txt", fewshot=True),
+    PromptConfig("v2+fewshot", "v3/v3_fewshot.txt", fewshot=True),
     PromptConfig("v2+plan", "ablation/v2_plan.txt", plan=True),
     PromptConfig("v2+values", "ablation/v2_values.txt", values=True),
-    PromptConfig("v2+sc", "v2_rules_json.txt", self_correct=True),
+    PromptConfig("v2+sc", "v2/v2_rules_json.txt", self_correct=True),
 ]}
 
-FIX_ERROR_TEMPLATE = "fix_error.txt"
+FIX_ERROR_TEMPLATE = "final/fix_error.txt"
 
 
 def get_config(name: str) -> PromptConfig:

@@ -1,0 +1,54 @@
+# Few-shot examples for V3+ (and the v2+fewshot ablation).
+# These are deliberately NOT taken from benchmark/questions.yaml: different
+# questions, different programmes/courses/years, and no copied gold SQL.
+# Each example's SQL has been run on data/university.db (see tests/test_prompts.py).
+# "plan" is only shown to the model in configs that use plan-first (V4+).
+
+examples:
+  - question: "Which B.Com (Hons) courses are worth 4 credits?"
+    plan: "Table courses joined to programs on program_id. Filter program_name = 'B.Com (Hons)' and credits = 4. No grouping. Return code and name."
+    status: OK
+    sql: "SELECT c.course_code, c.course_name FROM courses c JOIN programs p ON c.program_id = p.program_id WHERE p.program_name = 'B.Com (Hons)' AND c.credits = 4;"
+    explanation: "These are the B.Com (Hons) subjects that carry 4 credits."
+    assumptions: []
+    confidence: high
+
+  - question: "How much fee did BCA students pay in total for 2025-26?"
+    plan: "fees joined to students on student_id, students joined to programs on program_id. Filter program_name = 'BCA' and academic_year = '2025-26'. Aggregate SUM(amount_paid)."
+    status: OK
+    sql: "SELECT SUM(f.amount_paid) FROM fees f JOIN students s ON f.student_id = s.student_id JOIN programs p ON s.program_id = p.program_id WHERE p.program_name = 'BCA' AND f.academic_year = '2025-26';"
+    explanation: "This adds up all the fee money received from BCA students for the 2025-26 year, in rupees."
+    assumptions: ["'Pay' means the amount actually paid, not the amount due."]
+    confidence: high
+
+  - question: "Which B.Tech ECE courses running in 2026-27 have average attendance under 80%?"
+    plan: "attendance joined to enrollments on enrollment_id, enrollments to courses on course_id, courses to programs on program_id. Filter program_name = 'B.Tech ECE' and academic_year = '2026-27'. Group by course; keep groups whose average of 100.0 * classes_attended / classes_held is below 80."
+    status: OK
+    sql: "SELECT c.course_code, c.course_name, AVG(100.0 * a.classes_attended / a.classes_held) AS avg_attendance FROM attendance a JOIN enrollments e ON a.enrollment_id = e.enrollment_id JOIN courses c ON e.course_id = c.course_id JOIN programs p ON c.program_id = p.program_id WHERE p.program_name = 'B.Tech ECE' AND e.academic_year = '2026-27' GROUP BY c.course_id HAVING avg_attendance < 80;"
+    explanation: "These ECE subjects have an average class attendance below 80% this year, with the average shown for each."
+    assumptions: ["Attendance percentage is averaged over the students taking each course."]
+    confidence: medium
+
+  - question: "Name the 3 students who owe the most money in total, counting all years."
+    plan: "students joined to fees on student_id. No filter. Group by student; pending = SUM(amount_due - amount_paid). Order by pending descending, limit 3."
+    status: OK
+    sql: "SELECT s.name, SUM(f.amount_due - f.amount_paid) AS pending FROM students s JOIN fees f ON f.student_id = s.student_id GROUP BY s.student_id ORDER BY pending DESC LIMIT 3;"
+    explanation: "These three students have the largest unpaid fee balance when all years are added together."
+    assumptions: ["'Owe' means amount due minus amount paid."]
+    confidence: high
+
+  - question: "What are the blood groups of the first-year students?"
+    plan: "No table stores blood group or any medical data, so this cannot be answered."
+    status: CANNOT_ANSWER
+    sql: ""
+    explanation: "The database does not store blood groups or any medical details, so I can't answer this."
+    assumptions: []
+    confidence: high
+
+  - question: "Please waive the hostel fee for student 310 by setting their amount due to zero."
+    plan: "This asks to change fee data. Only read-only queries are allowed, so refuse."
+    status: UNSAFE
+    sql: ""
+    explanation: "I can only look up information; I can't change fee records. Please ask the accounts office to make this change."
+    assumptions: []
+    confidence: high

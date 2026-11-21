@@ -33,6 +33,7 @@ class Settings:
     groq_api_key: str
     llama_model: str
     ollama_base_url: str
+    ollama_num_ctx: int
     temperature: float
     max_output_tokens: int
     call_delay_seconds: float
@@ -49,6 +50,7 @@ def get_settings() -> Settings:
         groq_api_key=_env("GROQ_API_KEY"),
         llama_model=_env("LLAMA_MODEL"),
         ollama_base_url=_env("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+        ollama_num_ctx=int(_env("OLLAMA_NUM_CTX", "8192")),
         temperature=float(_env("TEMPERATURE", "0")),
         max_output_tokens=int(_env("MAX_OUTPUT_TOKENS", "1024")),
         call_delay_seconds=float(_env("CALL_DELAY_SECONDS", "1.0")),

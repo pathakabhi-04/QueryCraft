@@ -106,13 +106,35 @@ def _call_openai_compatible(backend: str, prompt: str, model_name: str,
     return resp.choices[0].message.content or ""
 
 
+def _call_ollama(prompt: str, model_name: str, temperature: float, max_tokens: int) -> str:
+    """Native Ollama API, so we can set num_ctx. The OpenAI-compatible endpoint
+    cannot, and Ollama's default context (often 2-4k tokens) silently cuts off the
+    start of long prompts such as V5."""
+    import urllib.request
+    s = get_settings()
+    host = s.ollama_base_url.rstrip("/").removesuffix("/v1")
+    body = json.dumps({
+        "model": model_name,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "options": {"temperature": temperature, "num_predict": max_tokens,
+                    "num_ctx": s.ollama_num_ctx},
+    }).encode()
+    req = urllib.request.Request(f"{host}/api/chat", data=body,
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=600) as resp:
+        data = json.loads(resp.read())
+    return data.get("message", {}).get("content", "") or ""
+
+
 def _is_retryable(err: Exception) -> bool:
     code = getattr(err, "code", None) or getattr(err, "status_code", None)
     if isinstance(code, int) and (code == 429 or code >= 500):
         return True
     name = type(err).__name__
     return name in {"RateLimitError", "APIConnectionError", "APITimeoutError",
-                    "InternalServerError", "ServerError", "ConnectionError", "TimeoutError"}
+                    "InternalServerError", "ServerError", "ConnectionError", "TimeoutError",
+                    "URLError", "RemoteDisconnected"}
 
 
 # ---------------------------------------------------------------- public API
@@ -124,7 +146,10 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
     if not model_name:
         raise LLMError(f"No model name configured for {model!r} (set it in .env)")
 
-    key_src = json.dumps([backend, model_name, s.temperature, s.max_output_tokens, run, prompt])
+    key_parts = [backend, model_name, s.temperature, s.max_output_tokens, run, prompt]
+    if backend == "ollama":
+        key_parts.append(s.ollama_num_ctx)
+    key_src = json.dumps(key_parts)
     cache_file = CACHE_DIR / f"{hashlib.sha256(key_src.encode()).hexdigest()}.json"
     if use_cache and cache_file.exists():
         data = json.loads(cache_file.read_text())
@@ -138,6 +163,8 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
         try:
             if backend == "gemini":
                 text = _call_gemini(prompt, model_name, s.temperature, s.max_output_tokens)
+            elif backend == "ollama":
+                text = _call_ollama(prompt, model_name, s.temperature, s.max_output_tokens)
             else:
                 text = _call_openai_compatible(backend, prompt, model_name,
                                                s.temperature, s.max_output_tokens)
