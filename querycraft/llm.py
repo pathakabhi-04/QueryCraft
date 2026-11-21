@@ -212,9 +212,12 @@ def list_models() -> None:
     s = get_settings()
     if s.gemini_api_key:
         print("Gemini models (generateContent):")
-        for m in _gemini_client().models.list():
-            if "generateContent" in (getattr(m, "supported_actions", None) or []):
-                print("  ", m.name.removeprefix("models/"))
+        try:
+            for m in _gemini_client().models.list():
+                if "generateContent" in (getattr(m, "supported_actions", None) or []):
+                    print("  ", m.name.removeprefix("models/"))
+        except Exception as e:  # noqa: BLE001
+            print(f"  could not list: {str(e)[:200]}")
     else:
         print("Gemini: GEMINI_API_KEY not set")
     try:
