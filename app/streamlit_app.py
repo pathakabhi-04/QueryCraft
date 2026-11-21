@@ -73,6 +73,17 @@ def available_models() -> dict:
 ensure_database()
 models = available_models()
 
+# Optional deep link: ?q=<question>&model=<gemini|llama>&config=<v5+sc|...> runs immediately.
+_qp = st.query_params
+if "q" in _qp and not st.session_state.get("_qp_done"):
+    st.session_state["_qp_done"] = True
+    st.session_state["question"] = _qp["q"]
+    st.session_state["run_now"] = True
+    if _qp.get("model") in models:
+        st.session_state["model"] = _qp["model"]
+    if _qp.get("config") in CONFIG_LABELS:
+        st.session_state["config"] = _qp["config"]
+
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.header("What's in the database")
@@ -104,11 +115,12 @@ with col_q:
     question = st.text_input("Your question", key="question",
                              placeholder="e.g. How many day scholars are in BCA?")
 with col_m:
-    model = st.selectbox("Model", list(models), format_func=models.get)
+    model = st.selectbox("Model", list(models), format_func=models.get, key="model")
 with col_v:
     configs = [c for c in CONFIG_LABELS if c in CONFIGS]
-    config = st.selectbox("Prompt version", configs, index=configs.index(DEFAULT_CONFIG),
-                          format_func=CONFIG_LABELS.get)
+    if "config" not in st.session_state:
+        st.session_state["config"] = DEFAULT_CONFIG
+    config = st.selectbox("Prompt version", configs, format_func=CONFIG_LABELS.get, key="config")
 
 ask = st.button("Ask", type="primary")
 if st.session_state.pop("run_now", False):

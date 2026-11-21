@@ -85,8 +85,35 @@ blockquote { border-left: 3px solid #eb6834; margin: 6pt 0; padding: 2pt 8pt; ba
 """
 
 
+ROOT = DOCS.parent
+_INCLUDE = re.compile(r"^<!-- include-(code|md): (\S+?)(?:#(.+?))? -->$", re.M)
+
+
+def expand_includes(text: str) -> str:
+    """<!-- include-code: path -->        file pasted as a text block (prompts stay text)
+    <!-- include-md: path -->            markdown file inlined
+    <!-- include-md: path#Heading -->    only the '## Heading' section (without the heading)
+    Paths are relative to the repository root."""
+    def repl(m):
+        kind, rel, section = m.group(1), m.group(2), m.group(3)
+        path = ROOT / rel
+        if not path.exists():
+            return f"> **MISSING INCLUDE:** `{rel}`"
+        content = path.read_text().rstrip()
+        if kind == "code":
+            return f"```text\n{content}\n```"
+        if section:
+            parts = re.split(r"^## ", content, flags=re.M)
+            match = [x for x in parts if x.startswith(section)]
+            if not match:
+                return f"> **MISSING SECTION:** `{rel}#{section}`"
+            content = match[0].split("\n", 1)[1].strip()
+        return content
+    return _INCLUDE.sub(repl, text)
+
+
 def build_pdf(md_path: Path, pdf_path: Path) -> None:
-    md_text = md_path.read_text()
+    md_text = expand_includes(md_path.read_text())
     body = markdown.markdown(md_text, extensions=["tables", "fenced_code", "sane_lists"])
     body = body.replace("<h2>", '<h2 class="first">', 1)
     html_path = md_path.with_suffix(".html")
