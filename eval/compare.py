@@ -25,8 +25,18 @@ CUMULATIVE = ["v1", "v2", "v3", "v4", "v5", "v5+sc"]
 ABLATION = ["v2", "v2+fewshot", "v2+plan", "v2+values", "v2+sc"]
 CATEGORIES = ["easy", "medium", "hard", "unanswerable", "adversarial"]
 
-# Fixed colour per model (colour follows the entity, never its rank).
-MODEL_COLORS = {"gemini": "#2a78d6", "llama": "#eb6834"}
+# Fixed colour per model (colour follows the entity, never its rank): Gemini models take
+# categorical slot 1; other models take slots 2, 3, 4 by sorted name.
+SLOT_1 = "#2a78d6"
+OTHER_SLOTS = ["#eb6834", "#1baf7a", "#eda100"]
+
+
+def model_colors(names) -> dict:
+    names = sorted(set(names))
+    others = [n for n in names if "gemini" not in n.lower()]
+    colors = {n: SLOT_1 for n in names if "gemini" in n.lower()}
+    colors.update({n: OTHER_SLOTS[i % len(OTHER_SLOTS)] for i, n in enumerate(others)})
+    return colors
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 
 METRIC_COLS = [
@@ -69,8 +79,8 @@ def _fmt(v) -> str:
 def build_tables(rows: list[dict]) -> dict:
     groups = defaultdict(list)
     for r in rows:
-        groups[(r["config"], r["model"], "ALL")].append(r)
-        groups[(r["config"], r["model"], r["category"])].append(r)
+        groups[(r["config"], r["model_name"], "ALL")].append(r)
+        groups[(r["config"], r["model_name"], r["category"])].append(r)
     table = {}
     for key, rs in groups.items():
         agg = aggregate(rs)
@@ -95,8 +105,8 @@ def _md_table(header: list[str], body: list[list]) -> str:
 
 def write_summary_md(table: dict, rows: list[dict], metas: list[dict], path: Path) -> None:
     configs = _ordered_configs({r["config"] for r in rows})
-    models = sorted({r["model"] for r in rows})
-    model_names = sorted({f"{r['model']} = `{r['model_name']}` ({r['backend']})" for r in rows})
+    models = sorted({r["model_name"] for r in rows})
+    model_names = sorted({f"`{r['model_name']}` ({r['backend']})" for r in rows})
     runs = sorted({r["run"] for r in rows})
     lines = ["# QueryCraft evaluation summary", ""]
     for m in metas:
@@ -136,7 +146,7 @@ def write_summary_md(table: dict, rows: list[dict], metas: list[dict], path: Pat
     errs = defaultdict(lambda: defaultdict(int))
     for r in rows:
         if not r["correct"]:
-            errs[(r["config"], r["model"])][r["error_type"]] += 1
+            errs[(r["config"], r["model_name"])][r["error_type"]] += 1
     etypes = sorted({e for d in errs.values() for e in d})
     if etypes:
         lines += ["", "## Error types (count of wrong answers, auto-classified)", ""]
@@ -174,8 +184,8 @@ def write_failures_md(rows: list[dict], path: Path) -> None:
     for etype in sorted(by_type, key=lambda e: -len(by_type[e])):
         items = by_type[etype]
         lines += [f"## {etype} ({len(items)})", ""]
-        for r in sorted(items, key=lambda r: (r["id"], r["config"], r["model"], r["run"])):
-            lines.append(f"### {r['id']} | {r['config']} | {r['model']} | run {r['run']}")
+        for r in sorted(items, key=lambda r: (r["id"], r["config"], r["model_name"], r["run"])):
+            lines.append(f"### {r['id']} | {r['config']} | {r['model_name']} | run {r['run']}")
             lines.append(f"- Question: {r['question']}")
             lines.append(f"- Expected: {r['expected_status']}; got: {r['status']}")
             if r.get("sql"):
@@ -207,6 +217,7 @@ def _style(ax, ylabel: str, ymax: float | None = 100):
 
 
 def _grouped_bars(ax, configs, models, value_of):
+    colors = model_colors(models)
     width = 0.8 / max(1, len(models))
     for i, model in enumerate(models):
         xs, ys = [], []
@@ -215,7 +226,7 @@ def _grouped_bars(ax, configs, models, value_of):
             if v is not None:
                 xs.append(j - 0.4 + width * (i + 0.5))
                 ys.append(v)
-        ax.bar(xs, ys, width=width * 0.9, color=MODEL_COLORS.get(model, "#888"),
+        ax.bar(xs, ys, width=width * 0.9, color=colors[model],
                label=model, edgecolor=SURFACE, linewidth=1.5)
     ax.set_xticks(range(len(configs)))
     ax.set_xticklabels(configs, color=INK)
@@ -234,7 +245,7 @@ def _save(fig, path: Path, title: str):
 def write_charts(table: dict, rows: list[dict], charts: Path) -> list[str]:
     charts.mkdir(parents=True, exist_ok=True)
     present = {r["config"] for r in rows}
-    models = sorted({r["model"] for r in rows})
+    models = sorted({r["model_name"] for r in rows})
     made = []
 
     def val(metric):

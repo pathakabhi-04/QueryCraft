@@ -66,7 +66,7 @@ def available_models() -> dict:
         out["gemini"] = f"Gemini · {s.gemini_model}"
     if s.llama_model and (s.llama_backend == "ollama" or s.groq_api_key):
         where = "Groq" if s.llama_backend == "groq" else "local Ollama"
-        out["llama"] = f"Llama · {s.llama_model} ({where})"
+        out["llama"] = f"Open model · {s.llama_model} ({where})"
     return out
 
 

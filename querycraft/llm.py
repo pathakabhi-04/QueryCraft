@@ -1,7 +1,9 @@
 """One interface to both models:  generate(prompt, model) -> LLMResponse(text, latency, ...)
 
-model is "gemini" (Google AI Studio) or "llama" (Groq or local Ollama, chosen
-by LLAMA_BACKEND in .env). Exact model names come from .env.
+model is "gemini" (Google AI Studio) or "llama", the open-model slot (Groq or local
+Ollama, chosen by LLAMA_BACKEND in .env). Groq retired its Llama chat models in 2026,
+so on Groq this slot runs an open-weight model (default openai/gpt-oss-120b); locally
+it runs Llama via Ollama. Exact model names come from .env and are logged with every result.
 
 Features needed for fair, cheap evaluation:
   * temperature / max tokens from .env (0 for all evaluation runs)
@@ -77,9 +79,11 @@ def _openai_client(backend: str):
         if backend == "groq":
             if not s.groq_api_key:
                 raise LLMError("GROQ_API_KEY is not set in .env")
-            _clients[backend] = OpenAI(api_key=s.groq_api_key, base_url=GROQ_BASE_URL)
+            # max_retries=0: rate-limit waits are handled (and kept out of latency) by generate()
+            _clients[backend] = OpenAI(api_key=s.groq_api_key, base_url=GROQ_BASE_URL,
+                                       max_retries=0)
         elif backend == "ollama":
-            _clients[backend] = OpenAI(api_key="ollama", base_url=s.ollama_base_url)
+            _clients[backend] = OpenAI(api_key="ollama", base_url=s.ollama_base_url, max_retries=0)
         else:
             raise LLMError(f"LLAMA_BACKEND must be 'groq' or 'ollama', got {backend!r}")
     return _clients[backend]
@@ -125,6 +129,16 @@ def _call_ollama(prompt: str, model_name: str, temperature: float, max_tokens: i
     with urllib.request.urlopen(req, timeout=600) as resp:
         data = json.loads(resp.read())
     return data.get("message", {}).get("content", "") or ""
+
+
+def _retry_after_seconds(err: Exception) -> float | None:
+    """Seconds the provider asked us to wait (HTTP Retry-After), if it said."""
+    resp = getattr(err, "response", None)
+    headers = getattr(resp, "headers", None) or {}
+    try:
+        return float(headers.get("retry-after"))
+    except (TypeError, ValueError):
+        return None
 
 
 def _is_retryable(err: Exception) -> bool:
@@ -175,6 +189,9 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
             _last_call = time.monotonic()
             if attempt < s.max_api_retries and _is_retryable(e):
                 backoff = min(60, 2 ** attempt * 2)
+                retry_after = _retry_after_seconds(e)
+                if retry_after is not None:
+                    backoff = max(backoff, min(retry_after + 1, 120))
                 print(f"  [{model}] {type(e).__name__}; retrying in {backoff}s "
                       f"({attempt + 1}/{s.max_api_retries})")
                 time.sleep(backoff)
