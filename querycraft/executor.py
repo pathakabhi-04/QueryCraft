@@ -31,7 +31,7 @@ def execute(sql: str, db_path: Path = DB_PATH, timeout: float | None = None,
             row_limit: int | None = None) -> dict:
     """Validate then run `sql`. Never raises for bad SQL; returns a structured result:
 
-    {ok, rows, columns, error, blocked_reason, sql, hallucination}
+    {ok, rows, columns, error, blocked_reason, block_category, sql, hallucination}
       ok=True              -> rows/columns hold the result
       blocked_reason set   -> the validator refused it (never executed)
       error set            -> it was valid but failed or timed out at run time
@@ -41,12 +41,13 @@ def execute(sql: str, db_path: Path = DB_PATH, timeout: float | None = None,
     row_limit = row_limit if row_limit is not None else settings.row_limit
 
     result = {"ok": False, "rows": [], "columns": [], "error": None,
-              "blocked_reason": None, "sql": sql, "hallucination": False}
+              "blocked_reason": None, "block_category": None, "sql": sql, "hallucination": False}
 
     v = validate(sql, schema=load_schema(str(db_path)), row_limit=row_limit)
     result["hallucination"] = v.hallucination
     if not v.ok:
         result["blocked_reason"] = v.reason
+        result["block_category"] = v.category
         return result
     result["sql"] = v.sql
 

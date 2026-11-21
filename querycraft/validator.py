@@ -43,6 +43,7 @@ class ValidationResult:
     ok: bool
     sql: str = ""                       # rewritten SQL (with LIMIT) when ok
     reason: str = ""                    # why it was blocked
+    category: str = ""                  # empty|parse|multi_statement|write|unknown_table|unknown_column
     tables: list = field(default_factory=list)
     unknown_tables: list = field(default_factory=list)
     unknown_columns: list = field(default_factory=list)
@@ -66,8 +67,14 @@ def load_schema(db_path: str = str(DB_PATH)) -> dict:
         conn.close()
 
 
-def _blocked(reason: str, **kw) -> ValidationResult:
-    return ValidationResult(ok=False, reason=reason, **kw)
+def _blocked(reason: str, category: str, **kw) -> ValidationResult:
+    return ValidationResult(ok=False, reason=reason, category=category, **kw)
+
+
+def _is_write(tree) -> bool:
+    if not isinstance(tree, ALLOWED_TOP_LEVEL):
+        return True
+    return any(isinstance(n, FORBIDDEN_NODES) for n in tree.walk())
 
 
 def validate(sql: str, schema: dict | None = None, row_limit: int | None = None) -> ValidationResult:
@@ -75,29 +82,32 @@ def validate(sql: str, schema: dict | None = None, row_limit: int | None = None)
     row_limit = row_limit if row_limit is not None else get_settings().row_limit
 
     if not sql or not sql.strip():
-        return _blocked("Empty SQL.")
+        return _blocked("Empty SQL.", "empty")
 
     # 1. parse
     try:
         statements = [s for s in sqlglot.parse(sql, read="sqlite") if s is not None]
     except ParseError as e:
-        return _blocked(f"SQL does not parse: {str(e).splitlines()[0]}")
+        return _blocked(f"SQL does not parse: {str(e).splitlines()[0]}", "parse")
 
     # 2. exactly one statement
+    if not statements:
+        return _blocked("Empty SQL.", "empty")
     if len(statements) != 1:
-        return _blocked(f"Expected exactly one SQL statement, found {len(statements)}.")
+        category = "write" if any(_is_write(s) for s in statements) else "multi_statement"
+        return _blocked(f"Expected exactly one SQL statement, found {len(statements)}.", category)
     tree = statements[0]
 
     # 3. read-only
     if not isinstance(tree, ALLOWED_TOP_LEVEL):
-        return _blocked(f"Only SELECT queries are allowed (got {tree.key.upper()}).")
+        return _blocked(f"Only SELECT queries are allowed (got {tree.key.upper()}).", "write")
     for node in tree.walk():
         if isinstance(node, FORBIDDEN_NODES):
-            return _blocked(f"Forbidden operation inside query: {node.key.upper()}.")
+            return _blocked(f"Forbidden operation inside query: {node.key.upper()}.", "write")
         if isinstance(node, exp.Func):
             name = (node.name if isinstance(node, exp.Anonymous) else node.sql_name()).lower()
             if name in FORBIDDEN_FUNCTIONS:
-                return _blocked(f"Forbidden function: {name}.")
+                return _blocked(f"Forbidden function: {name}.", "write")
 
     # 4. tables and columns must exist
     cte_names = {c.alias_or_name.lower() for c in tree.find_all(exp.CTE)}
@@ -113,12 +123,12 @@ def validate(sql: str, schema: dict | None = None, row_limit: int | None = None)
         alias_to_table[t.alias_or_name.lower()] = name
         alias_to_table[name] = name
     if unknown_tables:
-        return _blocked(f"Unknown table(s): {', '.join(sorted(set(unknown_tables)))}.",
+        return _blocked(f"Unknown table(s): {', '.join(sorted(set(unknown_tables)))}.", "unknown_table",
                         unknown_tables=sorted(set(unknown_tables)))
 
     unknown_columns = _unknown_columns(tree, schema, alias_to_table, cte_names, set(tables))
     if unknown_columns:
-        return _blocked(f"Unknown column(s): {', '.join(unknown_columns)}.",
+        return _blocked(f"Unknown column(s): {', '.join(unknown_columns)}.", "unknown_column",
                         tables=sorted(set(tables)), unknown_columns=unknown_columns)
 
     # 5. LIMIT

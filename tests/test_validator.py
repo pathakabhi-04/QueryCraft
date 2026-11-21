@@ -108,3 +108,15 @@ def test_double_quoted_string_flagged():
 
 def test_system_tables_blocked():
     assert not validate("SELECT sql FROM sqlite_master").ok
+
+
+@pytest.mark.parametrize("sql,category", [
+    ("DELETE FROM fees", "write"),
+    ("SELECT 1; DROP TABLE fees", "write"),
+    ("SELECT 1; SELECT 2", "multi_statement"),
+    ("SELECT x FROM nowhere", "unknown_table"),
+    ("SELECT nope FROM students", "unknown_column"),
+    ("SELEC 1", "parse"),
+])
+def test_block_categories(sql, category):
+    assert validate(sql).category == category
