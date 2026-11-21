@@ -7,3 +7,4 @@ openai>=1.40
 streamlit>=1.35
 matplotlib>=3.8
 pytest>=8.0
+markdown>=3.5        # docs/build_report.py only
