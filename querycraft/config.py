@@ -35,6 +35,8 @@ class Settings:
     ollama_base_url: str
     ollama_num_ctx: int
     temperature: float
+    gemini_thinking_level: str   # "" = model default; e.g. "minimal"
+    groq_reasoning_effort: str   # "" = model default; e.g. "low"
     max_output_tokens: int
     call_delay_seconds: float
     max_api_retries: int
@@ -52,6 +54,8 @@ def get_settings() -> Settings:
         ollama_base_url=_env("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
         ollama_num_ctx=int(_env("OLLAMA_NUM_CTX", "8192")),
         temperature=float(_env("TEMPERATURE", "0")),
+        gemini_thinking_level=_env("GEMINI_THINKING_LEVEL", "minimal").lower(),
+        groq_reasoning_effort=_env("GROQ_REASONING_EFFORT", "low").lower(),
         max_output_tokens=int(_env("MAX_OUTPUT_TOKENS", "1024")),
         call_delay_seconds=float(_env("CALL_DELAY_SECONDS", "1.0")),
         max_api_retries=int(_env("MAX_API_RETRIES", "5")),

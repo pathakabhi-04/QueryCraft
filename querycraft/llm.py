@@ -40,6 +40,7 @@ class LLMResponse:
     model_name: str         # exact provider model id, e.g. "gemini-3.5-flash"
     backend: str            # "gemini" / "groq" / "ollama"
     cached: bool = False
+    finish_reason: str = ""  # "stop", "length"/"MAX_TOKENS" (= output was cut off), ...
 
 
 class LLMError(RuntimeError):
@@ -68,7 +69,11 @@ def _gemini_client():
         key = get_settings().gemini_api_key
         if not key:
             raise LLMError("GEMINI_API_KEY is not set in .env")
-        _clients["gemini"] = genai.Client(api_key=key)
+        from google.genai import types
+        # attempts=1: no hidden SDK retries; generate() retries and keeps waits out of latency
+        _clients["gemini"] = genai.Client(
+            api_key=key,
+            http_options=types.HttpOptions(retry_options=types.HttpRetryOptions(attempts=1)))
     return _clients["gemini"]
 
 
@@ -89,28 +94,43 @@ def _openai_client(backend: str):
     return _clients[backend]
 
 
-def _call_gemini(prompt: str, model_name: str, temperature: float, max_tokens: int) -> str:
+def _call_gemini(prompt: str, model_name: str, temperature: float,
+                 max_tokens: int) -> tuple[str, str]:
     from google.genai import types
+    level = get_settings().gemini_thinking_level
+    extra = {"thinking_config": types.ThinkingConfig(thinking_level=level)} if level else {}
     resp = _gemini_client().models.generate_content(
         model=model_name,
         contents=prompt,
-        config=types.GenerateContentConfig(temperature=temperature, max_output_tokens=max_tokens),
+        config=types.GenerateContentConfig(temperature=temperature, max_output_tokens=max_tokens,
+                                           **extra),
     )
-    return resp.text or ""
+    finish = ""
+    if resp.candidates:
+        fr = resp.candidates[0].finish_reason
+        finish = getattr(fr, "name", str(fr or ""))
+    return resp.text or "", finish
 
 
 def _call_openai_compatible(backend: str, prompt: str, model_name: str,
-                            temperature: float, max_tokens: int) -> str:
+                            temperature: float, max_tokens: int) -> tuple[str, str]:
+    extra = {}
+    effort = get_settings().groq_reasoning_effort
+    if backend == "groq" and effort and "gpt-oss" in model_name:
+        extra["reasoning_effort"] = effort      # keep hidden reasoning small (see .env.example)
     resp = _openai_client(backend).chat.completions.create(
         model=model_name,
         messages=[{"role": "user", "content": prompt}],
         temperature=temperature,
         max_tokens=max_tokens,
+        **extra,
     )
-    return resp.choices[0].message.content or ""
+    choice = resp.choices[0]
+    return choice.message.content or "", choice.finish_reason or ""
 
 
-def _call_ollama(prompt: str, model_name: str, temperature: float, max_tokens: int) -> str:
+def _call_ollama(prompt: str, model_name: str, temperature: float,
+                 max_tokens: int) -> tuple[str, str]:
     """Native Ollama API, so we can set num_ctx. The OpenAI-compatible endpoint
     cannot, and Ollama's default context (often 2-4k tokens) silently cuts off the
     start of long prompts such as V5."""
@@ -128,7 +148,7 @@ def _call_ollama(prompt: str, model_name: str, temperature: float, max_tokens: i
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=600) as resp:
         data = json.loads(resp.read())
-    return data.get("message", {}).get("content", "") or ""
+    return data.get("message", {}).get("content", "") or "", data.get("done_reason", "")
 
 
 def _retry_after_seconds(err: Exception) -> float | None:
@@ -163,6 +183,10 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
     key_parts = [backend, model_name, s.temperature, s.max_output_tokens, run, prompt]
     if backend == "ollama":
         key_parts.append(s.ollama_num_ctx)
+    if backend == "gemini" and s.gemini_thinking_level:
+        key_parts.append(f"thinking={s.gemini_thinking_level}")
+    if backend == "groq" and s.groq_reasoning_effort and "gpt-oss" in model_name:
+        key_parts.append(f"effort={s.groq_reasoning_effort}")
     key_src = json.dumps(key_parts)
     cache_file = CACHE_DIR / f"{hashlib.sha256(key_src.encode()).hexdigest()}.json"
     if use_cache and cache_file.exists():
@@ -176,12 +200,14 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
         start = time.monotonic()
         try:
             if backend == "gemini":
-                text = _call_gemini(prompt, model_name, s.temperature, s.max_output_tokens)
+                text, finish = _call_gemini(prompt, model_name, s.temperature,
+                                            s.max_output_tokens)
             elif backend == "ollama":
-                text = _call_ollama(prompt, model_name, s.temperature, s.max_output_tokens)
+                text, finish = _call_ollama(prompt, model_name, s.temperature,
+                                            s.max_output_tokens)
             else:
-                text = _call_openai_compatible(backend, prompt, model_name,
-                                               s.temperature, s.max_output_tokens)
+                text, finish = _call_openai_compatible(backend, prompt, model_name,
+                                                       s.temperature, s.max_output_tokens)
             latency = time.monotonic() - start
             _last_call = time.monotonic()
             break
@@ -199,7 +225,7 @@ def generate(prompt: str, model: str, use_cache: bool = True, run: int = 0) -> L
             raise LLMError(f"{model} call failed: {type(e).__name__}: {e}") from e
 
     resp = LLMResponse(text=text, latency=latency, model=model,
-                       model_name=model_name, backend=backend)
+                       model_name=model_name, backend=backend, finish_reason=finish)
     if use_cache:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         data = asdict(resp)

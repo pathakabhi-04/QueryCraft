@@ -46,6 +46,10 @@ def answer(question: str, config: str = "v2", model: str = "llama", run: int = 0
         "model_name": model_name,
         "backend": backend,
         "temperature": settings.temperature,
+        "reasoning": (f"thinking_level={settings.gemini_thinking_level or 'default'}"
+                      if backend == "gemini" else
+                      f"reasoning_effort={settings.groq_reasoning_effort or 'default'}"
+                      if backend == "groq" and "gpt-oss" in model_name else "n/a"),
         "max_output_tokens": settings.max_output_tokens,
         "run": run,
         "attempts": [],            # one entry per LLM call (first + fix retries)
@@ -72,7 +76,8 @@ def answer(question: str, config: str = "v2", model: str = "llama", run: int = 0
         parsed, perr = _parse(resp.text, cfg.json_output if not rec["attempts"] else True)
         rec["attempts"].append({"prompt_hash": llm.prompt_hash(p), "raw_output": resp.text,
                                 "parsed": parsed, "parse_error": perr,
-                                "latency": resp.latency, "cached": resp.cached})
+                                "latency": resp.latency, "cached": resp.cached,
+                                "finish_reason": resp.finish_reason})
         return parsed if not perr else None
 
     parsed = call(prompt)

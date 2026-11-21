@@ -117,6 +117,8 @@ def main() -> None:
         "models": {m: dict(zip(("backend", "model_name"), llm.model_info(m))) for m in models},
         "temperature": s.temperature,
         "max_output_tokens": s.max_output_tokens,
+        "gemini_thinking_level": s.gemini_thinking_level or "model default",
+        "groq_reasoning_effort": s.groq_reasoning_effort or "model default",
         "max_fix_retries": 2,
         "runs": args.runs,
         "n_questions": len(items),

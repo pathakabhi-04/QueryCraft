@@ -23,5 +23,7 @@
   "benchmark_sha256": "7d9646460c476d57130bfd591b7283041d9a5664074291347c1ade72c5b69888",
   "benchmark_verified": "0/100",
   "git_commit": "d576c6b",
-  "cache": true
+  "cache": true,
+  "finished": "2026-11-21T20:43:30",
+  "wall_seconds": 2225.5
 }
