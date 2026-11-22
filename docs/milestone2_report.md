@@ -90,7 +90,7 @@ All diagrams were drawn from the actual code (`docs/architecture.md`).
 ### What is built
 
 A working NL-to-SQL assistant: a Streamlit app on top of a Python pipeline
-(`querycraft/`) that builds the prompt, calls Gemini or Llama, parses the JSON answer,
+(`querycraft/`) that builds the prompt, calls Gemini, gpt-oss or Llama, parses the JSON answer,
 validates the SQL, runs it read-only, self-corrects on errors and shows the result. Around
 it: a deterministic synthetic university database, a 100-question benchmark, an evaluation
 harness that measures every prompt version, and a pytest suite (92 tests).
@@ -105,27 +105,39 @@ harness that measures every prompt version, and a pytest suite (92 tests).
 | Prompt builder | Fills V1–V5, ablation and fix-error templates | Working | Tests check every config fills all placeholders |
 | NL-to-SQL pipeline with self-correction | Question → prompt → LLM → JSON → validate → execute → fix loop (max 2) | Working | |
 | Streamlit app | Question box, model/version selectors, explanation, table, SQL, refusals | Working | **[[TEAM: deployed at …]]** |
-| Benchmark | 100 questions with gold SQL across 5 categories | Partly working | All gold SQL runs; hand verification pending |
+| Benchmark | 100 questions with gold SQL across 5 categories | Working | All 100 gold queries run (`benchmark/check_gold.py`); hand verification of the gold SQL is pending |
 | Evaluation harness | Runs configs × models × questions; metrics, summary, failure list, charts | Working | |
 | Test-table runner | Runs the 14 test inputs, saves outputs, writes the test table | Working | |
 
 ### Prompt iteration log
 
-Numbers are from a real run of `eval/evaluate.py`:
-`eval/results/20261121-200625-llama3b-local-subset30/` (local **llama3.2:3b** via Ollama,
-temperature 0, 30-question subset = first 6 questions of each category, 1 run). The gold SQL
-is **not yet hand-verified**, so the numbers are provisional.
-**[[TEAM: when you have run the same command with Gemini, add its numbers here.]]**
+The gold SQL is **not yet hand-verified**, so all numbers are provisional. Each number comes
+from a saved run of `eval/evaluate.py`; the folder is given with each table.
 
 <!-- include-md: docs/iteration_log.md -->
 
-**Measured on the same run (overall, all metrics):**
+#### Ablation: one technique at a time on top of V2
 
-<!-- include-md: eval/results/20261121-200625-llama3b-local-subset30/summary.md#Overall (config x model) -->
+The question here is which technique helps *on its own*. Each row is V2 plus exactly one
+technique, on the 30-question subset (`eval/results/M2-ablation/`, combining
+`20261122-170804-gemini-ablation30` and `20261121-231240-llama3b-local-ablation30`).
 
-<!-- include-md: eval/results/20261121-200625-llama3b-local-subset30/summary.md#Accuracy by category (EX for answerable, status match for refusals) -->
+<!-- include-md: eval/results/M2-ablation/summary.md#Overall (config x model) -->
 
-![Accuracy by version](../eval/results/20261121-200625-llama3b-local-subset30/charts/accuracy_by_version.png)
+![Ablation](../eval/results/M2-ablation/charts/ablation.png)
+
+#### All metrics, cumulative versions
+
+Combined from the three cumulative runs above (`eval/results/M2-cumulative/`). The `n` column
+shows how many questions each row was measured on.
+
+<!-- include-md: eval/results/M2-cumulative/summary.md#Overall (config x model) -->
+
+<!-- include-md: eval/results/M2-cumulative/summary.md#Accuracy by category (EX for answerable, status match for refusals) -->
+
+![Accuracy by version](../eval/results/M2-cumulative/charts/accuracy_by_version.png)
+
+![Safety](../eval/results/M2-cumulative/charts/safety.png)
 
 #### Full text of each version
 

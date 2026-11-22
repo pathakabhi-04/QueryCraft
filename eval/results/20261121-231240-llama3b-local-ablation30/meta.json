@@ -1,0 +1,30 @@
+{
+  "started": "2026-11-21T23:12:40",
+  "command": "python -m eval.evaluate --configs v2,v2+fewshot,v2+plan,v2+values,v2+sc --models llama --per-category 6 --tag llama3b-local-ablation30",
+  "configs": [
+    "v2",
+    "v2+fewshot",
+    "v2+plan",
+    "v2+values",
+    "v2+sc"
+  ],
+  "models": {
+    "llama": {
+      "backend": "ollama",
+      "model_name": "llama3.2:3b"
+    }
+  },
+  "temperature": 0.0,
+  "max_output_tokens": 1024,
+  "gemini_thinking_level": "minimal",
+  "groq_reasoning_effort": "low",
+  "max_fix_retries": 2,
+  "runs": 1,
+  "n_questions": 30,
+  "benchmark_sha256": "7d9646460c476d57130bfd591b7283041d9a5664074291347c1ade72c5b69888",
+  "benchmark_verified": "0/100",
+  "git_commit": "a0f7c03",
+  "cache": true,
+  "finished": "2026-11-21T23:28:58",
+  "wall_seconds": 977.4
+}

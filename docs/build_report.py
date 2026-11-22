@@ -108,7 +108,7 @@ def expand_includes(text: str) -> str:
             if not match:
                 return f"> **MISSING SECTION:** `{rel}#{section}`"
             content = match[0].split("\n", 1)[1].strip()
-        return content
+        return expand_includes(content)   # nested includes
     return _INCLUDE.sub(repl, text)
 
 

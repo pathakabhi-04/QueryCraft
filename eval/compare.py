@@ -231,7 +231,9 @@ def _grouped_bars(ax, configs, models, value_of):
     ax.set_xticks(range(len(configs)))
     ax.set_xticklabels(configs, color=INK)
     if len(models) > 1:
-        ax.legend(frameon=False, labelcolor=INK)
+        # below the plot so it never covers a bar
+        ax.legend(frameon=False, labelcolor=INK, loc="upper center",
+                  bbox_to_anchor=(0.5, -0.12), ncol=len(models), fontsize=9)
 
 
 def _save(fig, path: Path, title: str):

@@ -38,3 +38,16 @@ who did what is in `docs/contribution_log.md`.
   `Retry-After` honoured).
 - **Evaluation:** first results on local `llama3.2:3b` (30-question subset). Full 100-question
   runs on both API models plus the ablation subset.
+
+## 2026-11-22
+- **Evaluation finished for Milestone 2.**
+  - Gemini: all 100 questions × V1–V5+SC (`eval/results/20261122-170552-gemini-full100/`) and
+    the 30-question ablation.
+  - gpt-oss-120b: V1–V5+SC on the 30-question subset (the Groq free tier allows 200k tokens a
+    day); V1–V3 on all 100 questions.
+  - llama3.2:3b (local): cumulative and ablation runs on the subset.
+  - Combined tables and charts are in `eval/results/M2-cumulative/` and `eval/results/M2-ablation/`.
+- **Test table:** 14 inputs on V5+SC / Gemini, 14/14 passed
+  (`test-data/test_table_gemini_v5_sc.md`); screenshots of real runs are in `docs/screenshots/`.
+- **Docs:** iteration log, limitations, research abstract and P1/P2 sample runs written from the
+  measured results. Built the M2 report PDF and the research-abstract PDF.

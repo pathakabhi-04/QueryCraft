@@ -1,0 +1,29 @@
+{
+  "started": "2026-11-21T20:56:57",
+  "command": "python -m eval.evaluate --configs v1,v2,v3,v4,v5,v5+sc --models llama --tag gptoss120b-full100",
+  "configs": [
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "v5+sc"
+  ],
+  "models": {
+    "llama": {
+      "backend": "groq",
+      "model_name": "openai/gpt-oss-120b"
+    }
+  },
+  "temperature": 0.0,
+  "max_output_tokens": 1024,
+  "gemini_thinking_level": "minimal",
+  "groq_reasoning_effort": "low",
+  "max_fix_retries": 2,
+  "runs": 1,
+  "n_questions": 100,
+  "benchmark_sha256": "7d9646460c476d57130bfd591b7283041d9a5664074291347c1ade72c5b69888",
+  "benchmark_verified": "0/100",
+  "git_commit": "fa5fd24",
+  "cache": true
+}
