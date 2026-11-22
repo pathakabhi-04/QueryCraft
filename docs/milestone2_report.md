@@ -11,8 +11,8 @@
 | Batch | **[[TEAM: e.g. B13-24]]** |
 | Faculty | **[[TEAM: faculty name]]** |
 | Members | **[[TEAM: Name, S24CSEU....]]**<br>**[[TEAM: Name, S24CSEU....]]** |
-| Prototype link | **[[TEAM: Streamlit Cloud URL]]** |
-| Repository link | **[[TEAM: GitHub URL]]** |
+| Prototype link | https://querycraft-cjf4babjadx8okkxnej8dm.streamlit.app/ |
+| Repository link | https://github.com/pathakabhi-04/QueryCraft |
 | Reel link | **[[TEAM: Drive / unlisted YouTube URL]]** (length: **[[TEAM: seconds]]** s) |
 
 **Counts used in the form:** final prompts **2** (P1, P2) · test inputs **14** · prompt versions **6** (V1, V2, V3, V4, V5, V5+SC)
@@ -104,7 +104,7 @@ harness that measures every prompt version, and a pytest suite (92 tests).
 | LLM interface | One function for Gemini, Groq and Ollama models; rate-limit backoff, caching | Working | Tested end to end with gemini-3.5-flash-lite, gpt-oss-120b and llama3.2:3b |
 | Prompt builder | Fills V1–V5, ablation and fix-error templates | Working | Tests check every config fills all placeholders |
 | NL-to-SQL pipeline with self-correction | Question → prompt → LLM → JSON → validate → execute → fix loop (max 2) | Working | |
-| Streamlit app | Question box, model/version selectors, explanation, table, SQL, refusals | Working | **[[TEAM: deployed at …]]** |
+| Streamlit app | Question box, model/version selectors, explanation, table, SQL, refusals | Working | Deployed on Streamlit Community Cloud: https://querycraft-cjf4babjadx8okkxnej8dm.streamlit.app/ |
 | Benchmark | 100 questions with gold SQL across 5 categories | Working | All 100 gold queries run (`benchmark/check_gold.py`); hand verification of the gold SQL is pending |
 | Evaluation harness | Runs configs × models × questions; metrics, summary, failure list, charts | Working | |
 | Test-table runner | Runs the 14 test inputs, saves outputs, writes the test table | Working | |

@@ -13,9 +13,9 @@ Prompt Engineering mini project (SCSE4041, Bennett University, problem C8).
 
 | | |
 |---|---|
-| Team | QueryCraft — _[Team ID]_ |
+| Team | QueryCraft |
 | Members | _[Name, S24CSEU....]_ · _[Name, S24CSEU....]_ |
-| Prototype | _[Streamlit Cloud link]_ |
+| Prototype | https://querycraft-cjf4babjadx8okkxnej8dm.streamlit.app/ |
 | Reel | _[Drive / unlisted YouTube link]_ |
 
 All data is **synthetic** (Faker, seed 42). No real student data is used anywhere.
