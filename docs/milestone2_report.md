@@ -4,16 +4,16 @@
 
 | | |
 |---|---|
-| Team ID | **[[TEAM: Team ID from Milestone 1]]** |
+| Team ID | PE-B65-03 |
 | Team name | QueryCraft |
 | Project title | QueryCraft: Natural Language to SQL for University Administration |
 | Course | SCSE4041 Prompt Engineering, Mini Project, Milestone 2 |
-| Batch | **[[TEAM: e.g. B13-24]]** |
-| Faculty | **[[TEAM: faculty name]]** |
+| Batch | B65-80 |
+| Faculty | Sonal Kukreja |
 | Members | Ishita Bora, S24CSEU2463 (team leader)<br>Abhinav Pathak, S24CSEU0906 |
 | Prototype link | https://querycraft-cjf4babjadx8okkxnej8dm.streamlit.app/ |
 | Repository link | https://github.com/pathakabhi-04/QueryCraft |
-| Reel link | **[[TEAM: Drive / unlisted YouTube URL]]** (length: **[[TEAM: seconds]]** s) |
+| Reel link | https://drive.google.com/file/d/1nCc2luihXJs-TLOAySsXdQHPGCMwFz9h/view?usp=sharing (length: **[[TEAM: seconds]]** s) |
 
 **Counts used in the form:** final prompts **2** (P1, P2) · test inputs **14** · prompt versions **6** (V1, V2, V3, V4, V5, V5+SC)
 
