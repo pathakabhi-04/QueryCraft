@@ -1,7 +1,7 @@
 """Render diagrams and build PDFs from the markdown docs (uses headless Chrome).
 
     python docs/build_report.py diagrams              # docs/architecture.md -> docs/diagrams/*.png
-    python docs/build_report.py pdf docs/milestone2_report.md docs/M2_report.pdf
+    python docs/build_report.py pdf docs/milestone2_report.md docs/M2_PE-B65-03_QueryCraft.pdf
 
 Mermaid is loaded from the jsDelivr CDN inside a local HTML page, so the first
 command needs internet access. Set CHROME=/path/to/chrome if it is not found.
