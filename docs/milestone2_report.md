@@ -10,7 +10,7 @@
 | Course | SCSE4041 Prompt Engineering, Mini Project, Milestone 2 |
 | Batch | **[[TEAM: e.g. B13-24]]** |
 | Faculty | **[[TEAM: faculty name]]** |
-| Members | **[[TEAM: Name, S24CSEU....]]**<br>**[[TEAM: Name, S24CSEU....]]** |
+| Members | Ishita Bora, S24CSEU2463 (team leader)<br>Abhinav Pathak, S24CSEU0906 |
 | Prototype link | https://querycraft-cjf4babjadx8okkxnej8dm.streamlit.app/ |
 | Repository link | https://github.com/pathakabhi-04/QueryCraft |
 | Reel link | **[[TEAM: Drive / unlisted YouTube URL]]** (length: **[[TEAM: seconds]]** s) |
@@ -180,7 +180,9 @@ Variables in curly brackets are filled by `querycraft/prompt_builder.py` (see th
 
 ## 5. Repository
 
-**[[TEAM: paste a screenshot of the GitHub repository page here]]**
+Repository: https://github.com/pathakabhi-04/QueryCraft (public).
+
+![GitHub repository](screenshots/github_repo.png)
 
 What changed since Milestone 1:
 
@@ -201,8 +203,8 @@ What changed since Milestone 1:
 
 | Member name | Enrollment no. | Role | Tasks done in Milestone 2 | Evidence | Contribution (%) |
 |---|---|---|---|---|---|
-| **[[TEAM]]** | **[[S24CSEU....]]** | **[[e.g. Prompt design & evaluation]]** | **[[e.g. wrote V2–V5 prompts, few-shot examples; ran evaluations]]** | **[[e.g. prompts/final/v5_value_hints.txt, eval/results/…, commits]]** | **[[..]]** |
-| **[[TEAM]]** | **[[S24CSEU....]]** | **[[e.g. Backend, safety & app]]** | **[[e.g. validator/executor, Streamlit app, benchmark verification]]** | **[[e.g. querycraft/validator.py, app/streamlit_app.py, benchmark/questions.yaml]]** | **[[..]]** |
+| Ishita Bora (team leader) | S24CSEU2463 | Prompt design & evaluation | Wrote prompt versions V1–V5 and the self-correction prompt, the few-shot examples and the prompt changelog; ran the evaluations (cumulative + ablation) and wrote the iteration log | `prompts/` (all versions, `prompts/CHANGELOG.md`), `prompts/fewshot_examples.yaml`, `eval/results/`, `docs/iteration_log.md`, Sections 2(c) and 3 | 50 |
+| Abhinav Pathak | S24CSEU0906 | Safety layer, app & testing | Built the SQL safety layer (validator + read-only executor), the Streamlit app and its deployment; ran the 14-input test table, took the screenshots and recorded the demo reel | `querycraft/validator.py`, `querycraft/executor.py`, `app/streamlit_app.py`, `test-data/`, prototype link, reel, Section 4 | 50 |
 
 Percentages must add up to 100. Every member must be able to explain the files they list.
-All members have agreed to this table: **[[TEAM: confirm]]**
+All members have agreed to this table: **Yes** (Ishita Bora, Abhinav Pathak).
