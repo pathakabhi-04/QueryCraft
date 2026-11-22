@@ -17,6 +17,16 @@ import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 import yaml  # noqa: E402
 
+# On Streamlit Cloud the keys live in the app's Secrets; copy them into the
+# environment so querycraft.config reads them exactly like a local .env.
+try:
+    import os
+    for _k, _v in st.secrets.items():
+        if isinstance(_v, (str, int, float)):
+            os.environ.setdefault(_k, str(_v))
+except Exception:      # no secrets file locally: .env is used instead
+    pass
+
 from querycraft import llm  # noqa: E402
 from querycraft.config import DB_PATH, SCHEMA_DOCS_PATH, get_settings  # noqa: E402
 from querycraft.pipeline import answer  # noqa: E402
