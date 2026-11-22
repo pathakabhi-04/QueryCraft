@@ -2,7 +2,7 @@
 
 Presenter: **Ishita**. Format: screen recording of the **deployed** app with voice-over (optional
 webcam in a corner). The demo must be a **real run**, so ask the question live.
-About 290 spoken words, which takes about 2 minutes at a calm pace.
+About 330 spoken words, roughly 2 min 10 s at a normal pace. If it runs over 150 s, cut the sentence about the models in part 3.
 
 ---
 
